@@ -1,9 +1,15 @@
 using IntMed.API.Configure;
+using IntMed.Application.Commands.Consultas.Requests;
+using IntMed.Application.Commands.Consultas.Response;
 using IntMed.Application.DTOs;
 using IntMed.Application.Interfaces;
+using IntMed.Infrasctructure.Factory;
+using IntMed.Infrastructure.Factory;
 using IntMed.Infrastructure.Repositories;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -11,6 +17,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 //Carregando key
 var key = Encoding.ASCII.GetBytes(builder.Configuration["TokenConfigurations:secureKey"]);
+var connectionString = builder.Configuration.GetConnectionString("PostGreesConnection");
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -65,8 +72,9 @@ builder.Services.AddAuthorization(options =>
 });
 
 
+builder.Services.AddTransient<IDataBaseConnectionFactory, DataBaseConnectionFactory>(x => new DataBaseConnectionFactory(connectionString));
 builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
-
+builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(typeof(CreateConsultaRequest).Assembly));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -110,6 +118,20 @@ app.MapPost("/Login",  (string username, string password) =>
             return Results.BadRequest(new LoginResponseDTO { Autenticated = false, Message = "Erro ao tentar autenticar" });
     }
 }).AllowAnonymous();
+
+
+app.MapPost("/consulta", async (IMediator mediator, CreateConsultaRequest par) =>
+{
+    var createdConsulta = await mediator.Send(par);
+    return Results.CreatedAtRoute("GetById", new {createdConsulta.Id}, createdConsulta);
+});
+
+app.MapPost("/medicos", async (IMediator mediator, CreateConsultaRequest par) =>
+{
+    var createdConsulta = await mediator.Send(par);
+    return Results.CreatedAtRoute("GetById", new { createdConsulta.Id }, createdConsulta);
+});
+
 
 app.MapGet("/weatherforecast", () =>
 {

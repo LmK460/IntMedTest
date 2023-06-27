@@ -1,5 +1,7 @@
-﻿using IntMed.Application.Interfaces;
+﻿using IntMed.Application.Commands.Consultas.Response;
+using IntMed.Application.Interfaces;
 using IntMed.Domain.Models;
+using IntMed.Infrastructure.Factory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,14 +10,24 @@ using System.Threading.Tasks;
 
 namespace IntMed.Infrastructure.Repositories
 {
+    
+
     public class ConsultaRepository : IConsultaRepository
     {
-        public Task<Consulta> CreateConsulta(Consulta consulta)
+
+        public IDataBaseConnectionFactory DatabaseConnectionFactory { get; }
+
+        public ConsultaRepository(IDataBaseConnectionFactory databaseConnectionFactory)
+        {
+            DatabaseConnectionFactory = databaseConnectionFactory;
+        }
+
+        public Task<CreateConsultaResponse> CreateConsulta(CreateConsultaResponse consulta)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Consulta> DeleteConsulta(Consulta consulta)
+        public Task DeleteConsulta(string consultaId)
         {
             throw new NotImplementedException();
         }
