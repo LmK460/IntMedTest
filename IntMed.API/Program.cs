@@ -177,13 +177,13 @@ app.MapDelete("/consultas/{consulta_id}", async (IMediator mediator, int consult
 
 app.MapPost("/medicos", async (IMediator mediator, CreateMedicoRequest medicos) =>
 {
-    var createdConsulta = await mediator.Send(medicos);
-    if (createdConsulta == null)
+    var createdMedico = await mediator.Send(medicos);
+    if (createdMedico == null)
     {
         Results.NoContent();
     }
 
-    return Results.CreatedAtRoute();
+    return Results.Created("Succes", createdMedico);
 });
 
 #endregion
@@ -203,7 +203,7 @@ app.MapPost("/agendas", async (IMediator mediator, CreateAgendaRequest agenda) =
     var createdAgenda = await mediator.Send(agenda);
     if (createdAgenda == null)
     {
-        Results.NotFound(createdAgenda);
+        Results.NotFound();
     }
 
     return Results.CreatedAtRoute();

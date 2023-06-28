@@ -12,6 +12,6 @@ namespace IntMed.Application.Commands.Agendas.Request
     {
         public int Med_id { get; set; }
         public DateTime Dia { get; set; }
-        public List<DateTime> horario { get; set; }
+        public List<string> horario { get; set; }
     }
 }
