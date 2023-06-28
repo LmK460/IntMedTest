@@ -143,7 +143,7 @@ app.MapPost("/consultas", async (IMediator mediator, CreateConsultaRequest par) 
         return Results.NoContent();
     }
     else
-    return Results.Ok(createdConsulta); //aterar para created
+    return Results.Created("Succes",createdConsulta); //aterar para created
 });
 
 
@@ -206,7 +206,7 @@ app.MapPost("/agendas", async (IMediator mediator, CreateAgendaRequest agenda) =
         Results.NotFound();
     }
 
-    return Results.CreatedAtRoute();
+    return Results.Created("Succes", createdAgenda);
 });
 #endregion
 
