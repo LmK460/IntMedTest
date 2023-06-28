@@ -1,12 +1,13 @@
-﻿using System;
+﻿using MediatR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IntMed.Domain.Models
+namespace IntMed.Application.Commands.Medicos
 {
-    public class Medico
+    public class CreateMedicoResponse :IRequest
     {
         public int Id { get; set; }
         public string Nome { get; set; }

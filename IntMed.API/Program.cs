@@ -1,6 +1,7 @@
 using IntMed.API.Configure;
 using IntMed.Application.Commands.Consultas.Requests;
 using IntMed.Application.Commands.Consultas.Response;
+using IntMed.Application.Commands.Medicos;
 using IntMed.Application.DTOs;
 using IntMed.Application.Interfaces;
 using IntMed.Infrasctructure.Factory;
@@ -9,6 +10,7 @@ using IntMed.Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -74,7 +76,10 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddTransient<IDataBaseConnectionFactory, DataBaseConnectionFactory>(x => new DataBaseConnectionFactory(connectionString));
 builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
+builder.Services.AddScoped<IMedicoRepository, MedicoRepository>();
+
 builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(typeof(CreateConsultaRequest).Assembly));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -120,17 +125,47 @@ app.MapPost("/Login",  (string username, string password) =>
 }).AllowAnonymous();
 
 
-app.MapPost("/consulta", async (IMediator mediator, CreateConsultaRequest par) =>
+app.MapPost("/consultas", async (IMediator mediator, CreateConsultaRequest par) =>
 {
     var createdConsulta = await mediator.Send(par);
     return Results.CreatedAtRoute("GetById", new {createdConsulta.Id}, createdConsulta);
 });
 
-app.MapPost("/medicos", async (IMediator mediator, CreateConsultaRequest par) =>
+
+app.MapDelete("/consultas/{consulta_id}", async (IMediator mediator, int consulta_id) =>
+{
+    var deletedConsulta = new DeleteConsultaRequest { ConsultaId = consulta_id };
+
+    var aux = mediator.Send(deletedConsulta);
+    if (aux.IsCompletedSuccessfully)
+    {
+        return Results.Ok();
+    }
+    else return Results.NotFound();
+}).AllowAnonymous();
+
+
+app.MapPost("/medicos", async (IMediator mediator, CreateMedicoRequest par) =>
 {
     var createdConsulta = await mediator.Send(par);
-    return Results.CreatedAtRoute("GetById", new { createdConsulta.Id }, createdConsulta);
-});
+    if(createdConsulta == null)
+    {
+        Results.NotFound(createdConsulta);
+    }
+
+    return Results.Ok(createdConsulta);
+}).AllowAnonymous();
+
+app.MapGet("/crm/{id}", async (IMediator mediator, int crm) =>
+{
+    var getcrm = new CreateMedicoRequest{ CRM = crm};
+    var aux = await mediator.Send(getcrm);
+
+    return Results.Ok();
+}).AllowAnonymous(); 
+
+
+
 
 
 app.MapGet("/weatherforecast", () =>

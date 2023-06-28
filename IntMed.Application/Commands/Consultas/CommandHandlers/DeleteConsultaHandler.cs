@@ -19,7 +19,19 @@ namespace IntMed.Application.Commands.Consulta.CommandHandlers
         }
         public async Task Handle(DeleteConsultaRequest request, CancellationToken cancellationToken)
         {
-             await _consultaRepository.DeleteConsulta(request.ConsultaId); 
+            var validacao = _consultaRepository.GetConsultasById(request.ConsultaId).Result;
+            if (validacao == null) //agenda não existente
+            {
+                Exception exception = new Exception ("Agenda não existe");
+                throw exception;
+            }
+            else if(validacao.DataAgendamento < DateTime.UtcNow)
+            {
+                Exception exception = new Exception("Data Agendamento Invalida");
+                throw exception;
+            }
+            else
+                await _consultaRepository.DeleteConsulta(request.ConsultaId); 
         }
     }
 }

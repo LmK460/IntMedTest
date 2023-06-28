@@ -1,4 +1,6 @@
-﻿using IntMed.Application.Commands.Consultas.Response;
+﻿using Dapper;
+using IntMed.Application.Commands.Consultas.Response;
+using IntMed.Application.DTOs;
 using IntMed.Application.Interfaces;
 using IntMed.Domain.Models;
 using IntMed.Infrastructure.Factory;
@@ -27,9 +29,24 @@ namespace IntMed.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public Task DeleteConsulta(string consultaId)
+        public async Task DeleteConsulta(int consultaId)
         {
-            throw new NotImplementedException();
+            using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
+            {
+                string sql = "DELETE from consulta where con_id = @ID_P";
+                Medico result = new Medico();
+                try
+                {
+                    var param = new DynamicParameters();
+                    param.Add("@ID_P", consultaId);
+                    var cont = await connection.ExecuteScalarAsync<int>(sql, param);
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
         }
 
         public Task<ICollection<Consulta>> GetAllConsultas()
@@ -37,9 +54,38 @@ namespace IntMed.Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<Consulta> GetConsultasById(string Id)
+        public async Task<ConsultaDTO> GetConsultasById(int Id)
         {
-            throw new NotImplementedException();
+            using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
+            {
+                string sql = "select con_id as id, ag_id, med_id, horario, data_agendamento from consulta where con_id = @ID_P";
+                ConsultaDTO result = new ConsultaDTO();
+                try
+                {
+                    var param = new DynamicParameters();
+                    param.Add("@ID_P", Id);
+                    var dr = await connection.ExecuteReaderAsync(sql, param);
+
+                    if (dr.HasRows)
+                    {
+                        dr.Read();
+                        result = new ConsultaDTO
+                        {
+                            Id = (int)dr["id"],
+                            AgendaId = (int)dr["ag_id"],
+                            MedicoId = (int)dr["med_id"],
+                            DataAgendamento = DateTime.Parse(dr["data_agendamento"].ToString()),
+                            Horario = DateTime.Parse(dr["horario"].ToString())
+                        };
+
+                    }
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
+            }
         }
     }
 }

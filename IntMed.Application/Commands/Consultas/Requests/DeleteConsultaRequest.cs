@@ -9,6 +9,6 @@ namespace IntMed.Application.Commands.Consultas.Requests
 {
     public class DeleteConsultaRequest :IRequest
     {
-        public string ConsultaId { get; set; }
+        public int ConsultaId { get; set; }
     }
 }
