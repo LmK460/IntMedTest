@@ -1,9 +1,11 @@
 using IntMed.API.Configure;
+using IntMed.Application.Commands.Agendas.Request;
 using IntMed.Application.Commands.Consultas.Requests;
 using IntMed.Application.Commands.Consultas.Response;
 using IntMed.Application.Commands.Medicos;
 using IntMed.Application.DTOs;
 using IntMed.Application.Interfaces;
+using IntMed.Application.Queries;
 using IntMed.Infrasctructure.Factory;
 using IntMed.Infrastructure.Factory;
 using IntMed.Infrastructure.Repositories;
@@ -19,11 +21,13 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 //Carregando key
 var key = Encoding.ASCII.GetBytes(builder.Configuration["TokenConfigurations:secureKey"]);
+//Recuperando connectionString
 var connectionString = builder.Configuration.GetConnectionString("PostGreesConnection");
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
+#region Configurando swagger e tokenização
 builder.Services.AddSwaggerGen(x =>
 {
     x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -73,12 +77,17 @@ builder.Services.AddAuthorization(options =>
     .Build();
 });
 
+#endregion
 
+#region Configura Services
 builder.Services.AddTransient<IDataBaseConnectionFactory, DataBaseConnectionFactory>(x => new DataBaseConnectionFactory(connectionString));
 builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
 builder.Services.AddScoped<IMedicoRepository, MedicoRepository>();
+builder.Services.AddScoped<IAgendaRepository, AgendaRepository>();
 
 builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(typeof(CreateConsultaRequest).Assembly));
+
+#endregion
 
 var app = builder.Build();
 
@@ -93,6 +102,9 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+#region Rotas
+
+# region Login
 
 app.MapPost("/Login",  (string username, string password) =>
 {
@@ -120,13 +132,26 @@ app.MapPost("/Login",  (string username, string password) =>
     }
 }).AllowAnonymous();
 
+#endregion
 
+#region Consultas
 app.MapPost("/consultas", async (IMediator mediator, CreateConsultaRequest par) =>
 {
     var createdConsulta = await mediator.Send(par);
     return Results.CreatedAtRoute("GetById", new {createdConsulta.Id}, createdConsulta);
 });
 
+
+app.MapGet("/consultas", async (IMediator mediator) =>
+{
+    var getcon = new GetAllConsultas();
+    var result = await mediator.Send(getcon);
+    if(result.Count () > 0)
+    {
+        return Results.Ok(result);
+    }
+    return Results.NoContent();
+}).AllowAnonymous();
 
 app.MapDelete("/consultas/{consulta_id}", async (IMediator mediator, int consulta_id) =>
 {
@@ -137,27 +162,49 @@ app.MapDelete("/consultas/{consulta_id}", async (IMediator mediator, int consult
     {
         return Results.Ok();
     }
-    else return Results.NotFound();
+    return Results.NoContent();
+    
 }).AllowAnonymous();
 
+#endregion
 
-app.MapPost("/medicos", async (IMediator mediator, CreateMedicoRequest par) =>
+#region Medicos
+
+app.MapPost("/medicos", async (IMediator mediator, CreateMedicoRequest medicos) =>
 {
-    var createdConsulta = await mediator.Send(par);
+    var createdConsulta = await mediator.Send(medicos);
     if(createdConsulta == null)
     {
-        Results.NotFound(createdConsulta);
+        Results.NoContent();
     }
 
-    return Results.Ok(createdConsulta);
+    return Results.CreatedAtRoute();
 }).AllowAnonymous();
 
-app.MapGet("/crm/{id}", async (IMediator mediator, int crm) =>
+#endregion
+
+#region Agendas
+app.MapGet("/agendas", async (IMediator mediator) =>
 {
-    var getcrm = new CreateMedicoRequest{ CRM = crm};
-    var aux = await mediator.Send(getcrm);
+    var getcrm = new GetAllAgendas();
+    var result = await mediator.Send(getcrm);
 
-    return Results.Ok();
+    return Results.Ok( result);
 }).AllowAnonymous();
+
+
+app.MapPost("/agendas", async (IMediator mediator, CreateAgendaRequest agenda) =>
+{
+    var createdAgenda = await mediator.Send(agenda);
+    if (createdAgenda == null)
+    {
+        Results.NotFound(createdAgenda);
+    }
+
+    return Results.CreatedAtRoute();
+}).AllowAnonymous();
+#endregion
+
+#endregion
 
 app.Run();

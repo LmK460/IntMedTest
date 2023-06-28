@@ -4,14 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IntMed.Domain.Models
+namespace IntMed.Application.DTOs
 {
-    public class Agenda
+    public class AgendaDTO
     {
         public int AgendaId { get; set; }
-        public Medico Medico { get; set; }
+        public int MedicoId { get; set; }
         public DateTime Dia { get; set; }
 
-        public List<DateTime> Horarios { get ; set; }
     }
 }
