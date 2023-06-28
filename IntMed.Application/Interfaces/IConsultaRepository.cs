@@ -12,11 +12,14 @@ namespace IntMed.Application.Interfaces
 {
     public interface IConsultaRepository
     {
-        Task<ConsultaDTO> GetConsultasById(int Id);
+        Task<CreateConsultaResponse> GetConsultasById(int Id);
         Task<ICollection<GetAllConsultasResponse>> GetAllConsultas();
 
         Task<CreateConsultaResponse> CreateConsulta(CreateConsultaResponse consulta);
         Task DeleteConsulta(int consultaId);
-        Task<List<DateTime>> GetHorarioByConId(int Id);
+        Task<int> GetHorarioByAgId(int agendaId, DateTime data);
+    
+
+
     }
 }

@@ -11,7 +11,7 @@ namespace IntMed.Application.Commands.Consultas.Requests
 {
     public class CreateConsultaRequest : IRequest<CreateConsultaResponse>
     {
-        public string AgendaId { get; set; }
+        public int AgendaId { get; set; }
         public string Horario { get; set; }
     }
 }

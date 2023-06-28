@@ -22,6 +22,13 @@ namespace IntMed.Application.Commands.Consulta.CommandHandlers
         {
             var hora = int.Parse(request.Horario.Split(':')[0]);
             var minuto = int.Parse(request.Horario.Split(':')[1]);
+
+            if(hora > 24 || minuto > 59)
+            {
+                return new CreateConsultaResponse();
+            }
+            
+
             var newConsulta = new CreateConsultaResponse
             {
 

@@ -138,7 +138,12 @@ app.MapPost("/Login",  (string username, string password) =>
 app.MapPost("/consultas", async (IMediator mediator, CreateConsultaRequest par) =>
 {
     var createdConsulta = await mediator.Send(par);
-    return Results.CreatedAtRoute("GetById", new {createdConsulta.Id}, createdConsulta);
+    if(createdConsulta == null)
+    {
+        return Results.NoContent();
+    }
+    else
+    return Results.Ok(createdConsulta); //aterar para created
 });
 
 
@@ -146,12 +151,12 @@ app.MapGet("/consultas", async (IMediator mediator) =>
 {
     var getcon = new GetAllConsultas();
     var result = await mediator.Send(getcon);
-    if(result.Count () > 0)
+    if (result.Count() > 0)
     {
         return Results.Ok(result);
     }
     return Results.NoContent();
-}).AllowAnonymous();
+});
 
 app.MapDelete("/consultas/{consulta_id}", async (IMediator mediator, int consulta_id) =>
 {
@@ -163,8 +168,8 @@ app.MapDelete("/consultas/{consulta_id}", async (IMediator mediator, int consult
         return Results.Ok();
     }
     return Results.NoContent();
-    
-}).AllowAnonymous();
+
+});
 
 #endregion
 
@@ -173,13 +178,13 @@ app.MapDelete("/consultas/{consulta_id}", async (IMediator mediator, int consult
 app.MapPost("/medicos", async (IMediator mediator, CreateMedicoRequest medicos) =>
 {
     var createdConsulta = await mediator.Send(medicos);
-    if(createdConsulta == null)
+    if (createdConsulta == null)
     {
         Results.NoContent();
     }
 
     return Results.CreatedAtRoute();
-}).AllowAnonymous();
+});
 
 #endregion
 
@@ -189,8 +194,8 @@ app.MapGet("/agendas", async (IMediator mediator) =>
     var getcrm = new GetAllAgendas();
     var result = await mediator.Send(getcrm);
 
-    return Results.Ok( result);
-}).AllowAnonymous();
+    return Results.Ok(result);
+});
 
 
 app.MapPost("/agendas", async (IMediator mediator, CreateAgendaRequest agenda) =>
@@ -202,7 +207,7 @@ app.MapPost("/agendas", async (IMediator mediator, CreateAgendaRequest agenda) =
     }
 
     return Results.CreatedAtRoute();
-}).AllowAnonymous();
+});
 #endregion
 
 #endregion

@@ -25,9 +25,45 @@ namespace IntMed.Infrastructure.Repositories
             DatabaseConnectionFactory = databaseConnectionFactory;
         }
 
-        public Task<CreateConsultaResponse> CreateConsulta(CreateConsultaResponse consulta)
+        public async Task<CreateConsultaResponse> CreateConsulta(CreateConsultaResponse consulta)
         {
-            throw new NotImplementedException();
+
+            int hr_id = await GetHorarioByAgId(consulta.IdAgenda, consulta.Horario);
+            if (hr_id>0) //horario disponivel
+            {
+                using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
+                {
+                    var sql = "call createconsulta(@AG_ID,@HORA,@HR_ID,@ID_OUT) ";
+                    var update = "update horario set status = 'F', data_modificacao = current_timestamp where hor_id = @HR_ID";
+                    try
+                    {
+                        var param = new DynamicParameters();
+                        param.Add("@AG_ID", consulta.IdAgenda);
+                        param.Add("@HORA", consulta.Horario);
+                        param.Add("@HR_ID", hr_id);
+                        param.Add("@ID_OUT", consulta.Id);
+                        var cont = await connection.ExecuteScalarAsync<int>(sql, param);
+                        if (cont > 0)
+                        {
+                            var paramUpdate = param = new DynamicParameters();
+                            paramUpdate.Add("@HR_ID", hr_id);
+
+                            await connection.ExecuteScalarAsync<int>(update, paramUpdate);
+
+                            return await GetConsultasById(cont);
+                        }
+                        else
+                            return new CreateConsultaResponse();
+ 
+                    }
+                    catch (Exception ex)
+                    {
+                        return new CreateConsultaResponse();
+                    }
+                }
+            }
+            else
+                return new CreateConsultaResponse();
         }
 
         public async Task DeleteConsulta(int consultaId)
@@ -96,29 +132,39 @@ namespace IntMed.Infrastructure.Repositories
             }
         }
 
-        public async Task<ConsultaDTO> GetConsultasById(int Id)
+
+        public async Task<CreateConsultaResponse> GetConsultasById(int Id)
         {
             using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
             {
-                string sql = "select con_id as id, ag_id, med_id, horario, data_agendamento from consulta where con_id = @ID_P";
-                ConsultaDTO result = new ConsultaDTO();
+                string sql = "select con_id as id, ag_id, m.med_id, horario, data_agendamento, m.nome, m.crm, m.email from consulta a " +
+                    "inner join medicos m on a.med_id = m.med_id " +
+                    " where con_id = @ID_P";
                 try
                 {
                     var param = new DynamicParameters();
                     param.Add("@ID_P", Id);
                     var dr = await connection.ExecuteReaderAsync(sql, param);
-
+                    var result = new CreateConsultaResponse();
                     if (dr.HasRows)
                     {
                         dr.Read();
-                        result = new ConsultaDTO
+                        var med_id = (int)dr["med_id"];
+                        result = new CreateConsultaResponse
                         {
                             Id = (int)dr["id"],
-                            AgendaId = (int)dr["ag_id"],
-                            MedicoId = (int)dr["med_id"],
+                            IdAgenda = (int)dr["ag_id"],
                             DataAgendamento = DateTime.Parse(dr["data_agendamento"].ToString()),
-                            Horario = await GetHorarioByConId(Id)
-                    };
+                            Horario = DateTime.Parse(dr["horario"].ToString()),
+                            Medico = new Medico
+                            {
+                                CRM = (int)dr["crm"],
+                                Email = (string)dr["email"],
+                                Id = (int)dr["med_id"],
+                                Nome = (string)dr["nome"]
+                            },
+                            Dia = DateTime.Parse(dr["horario"].ToString()).ToShortDateString()
+                        };
 
                     }
                     return result;
@@ -130,39 +176,63 @@ namespace IntMed.Infrastructure.Repositories
             }
         }
 
-        public async Task<List<DateTime>> GetHorarioByConId(int Id)
+
+
+        public async Task<int> GetHorarioByAgId(int agendaId, DateTime data)
         {
             using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
             {
-                string sql = "select horario from horario where ag_id = @ID_P and status = 'A'";
+                string sql = "select hor_id from horario where ag_id = @ID_P and status = 'A' and horario = @DATA_P LIMIT 1";
                 List<DateTime> result = new List<DateTime>();
                 try
                 {
                     var param = new DynamicParameters();
-                    param.Add("@ID_P", Id);
-                    var dr = await connection.ExecuteReaderAsync(sql, param);
+                    param.Add("@ID_P", agendaId);
+                    param.Add("@DATA_P", data);
+                    int dr = await connection.ExecuteScalarAsync<int>(sql, param);
 
-                    
-
-                        while (dr.Read())
-                        {
-                            if (dr.HasRows)
-                            {
-                                result.Add(DateTime.Parse(dr["horario"].ToString()));
-                            }
-                        } ;
-                        //result.Add(DateTime.Parse(dr["horario"].ToString()));
-                        //while (dr.Read()) ;
-                        //{
-                        //    result.Add(DateTime.Parse(dr["horario"].ToString()));
-                        //}
-
-                    
-                    return result;
+                    return dr;
                 }
                 catch (Exception ex)
                 {
-                    return null;
+                    return 0;
+                }
+            }
+        }
+
+
+        public async Task<Medico> GetMedicobyId(int crmId)
+        {
+            using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
+            {
+                string sql = "select med_id as ID,email as EMAIL, crm as CRM,nome as NOME from medicos where med_id = @ID_P";
+                Medico result = new Medico();
+                try
+                {
+                    var param = new DynamicParameters();
+                    param.Add("@ID_P", crmId);
+                    var dr = await connection.ExecuteReaderAsync(sql, param);
+
+                    if (dr.HasRows)
+                    {
+                        dr.Read();
+                        result = new Medico
+                        {
+                            Id = (int)dr["Id"],
+                            CRM = (int)dr["CRM"],
+                            Nome = dr["NOME"].ToString(),
+                            Email = dr["EMAIL"].ToString()
+                        };
+
+                    }
+
+                    return result;
+                    //}
+
+                }
+                catch (Exception ex)
+                {
+                    return new Medico();
                 }
             }
         }

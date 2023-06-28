@@ -9,8 +9,8 @@ namespace IntMed.Application.Commands.Consultas.Response
 {
     public class CreateConsultaResponse
     {
-        public string IdAgenda { get; set; }
-        public string Id { get; set; }
+        public int IdAgenda { get; set; }
+        public int Id { get; set; }
         public string Dia { get; set; }
         public DateTime DataAgendamento { get; set; }
         public DateTime Horario { get; set; }
