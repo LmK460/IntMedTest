@@ -86,7 +86,7 @@ namespace IntMed.Infrastructure.Repositories
                     return null;
                 }
             }
-        =}
+        }
 
         public async Task<List<DateTime>> GetHorarioByConId(int Id)
         {
