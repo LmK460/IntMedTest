@@ -93,10 +93,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
 
 app.MapPost("/Login",  (string username, string password) =>
 {
@@ -162,29 +158,6 @@ app.MapGet("/crm/{id}", async (IMediator mediator, int crm) =>
     var aux = await mediator.Send(getcrm);
 
     return Results.Ok();
-}).AllowAnonymous(); 
-
-
-
-
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-       new WeatherForecast
-       (
-           DateTime.Now.AddDays(index),
-           Random.Shared.Next(-20, 55),
-           summaries[Random.Shared.Next(summaries.Length)]
-       ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+}).AllowAnonymous();
 
 app.Run();
-
-internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

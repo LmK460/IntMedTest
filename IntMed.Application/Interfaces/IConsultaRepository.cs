@@ -16,6 +16,6 @@ namespace IntMed.Application.Interfaces
 
         Task<CreateConsultaResponse> CreateConsulta(CreateConsultaResponse consulta);
         Task DeleteConsulta(int consultaId);
-
+        Task<List<DateTime>> GetHorarioByConId(int Id);
     }
 }

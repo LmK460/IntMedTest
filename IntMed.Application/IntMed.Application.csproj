@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Commands\Agendas\CommandHandlers\" />
+    <Folder Include="Commands\Agendas\Request\" />
     <Folder Include="Queries\" />
   </ItemGroup>
 

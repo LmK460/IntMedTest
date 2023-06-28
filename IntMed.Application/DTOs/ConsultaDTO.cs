@@ -14,6 +14,6 @@ namespace IntMed.Application.DTOs
 
         public int MedicoId { get; set; }
 
-        public DateTime Horario { get; set; }
+        public List<DateTime> Horario { get; set; }
     }
 }

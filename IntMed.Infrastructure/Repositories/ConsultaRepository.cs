@@ -75,10 +75,47 @@ namespace IntMed.Infrastructure.Repositories
                             AgendaId = (int)dr["ag_id"],
                             MedicoId = (int)dr["med_id"],
                             DataAgendamento = DateTime.Parse(dr["data_agendamento"].ToString()),
-                            Horario = DateTime.Parse(dr["horario"].ToString())
                         };
 
                     }
+                    result.Horario =  await GetHorarioByConId(Id);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
+            }
+        =}
+
+        public async Task<List<DateTime>> GetHorarioByConId(int Id)
+        {
+            using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
+            {
+                string sql = "select horario from horario where ag_id = @ID_P";
+                List<DateTime> result = new List<DateTime>();
+                try
+                {
+                    var param = new DynamicParameters();
+                    param.Add("@ID_P", Id);
+                    var dr = await connection.ExecuteReaderAsync(sql, param);
+
+                    
+
+                        while (dr.Read())
+                        {
+                            if (dr.HasRows)
+                            {
+                                result.Add(DateTime.Parse(dr["horario"].ToString()));
+                            }
+                        } ;
+                        //result.Add(DateTime.Parse(dr["horario"].ToString()));
+                        //while (dr.Read()) ;
+                        //{
+                        //    result.Add(DateTime.Parse(dr["horario"].ToString()));
+                        //}
+
+                    
                     return result;
                 }
                 catch (Exception ex)
