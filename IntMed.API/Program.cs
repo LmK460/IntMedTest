@@ -201,9 +201,9 @@ app.MapGet("/agendas", async (IMediator mediator) =>
 app.MapPost("/agendas", async (IMediator mediator, CreateAgendaRequest agenda) =>
 {
     var createdAgenda = await mediator.Send(agenda);
-    if (createdAgenda == null)
+    if (createdAgenda.Medico == null)
     {
-        Results.NotFound();
+        return Results.NotFound("Ocorreu uma Falha ao inserir o registro");
     }
 
     return Results.Created("Succes", createdAgenda);

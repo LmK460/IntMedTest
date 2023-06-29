@@ -24,10 +24,14 @@ namespace IntMed.Infrastructure.Repositories
             using (var connection = await DatabaseConnectionFactory.GetConnectionFactoryAsync())
             {
                 var result = new Agenda();
-                
+                Medico medico = await GetMedicobyId(agenda.Med_id);
+                if(medico.Id <=0)
+                {
+                    return result;
+                }
                 try
                 {
-                    var sql = "call CreateAgenda(@MED_ID,@CRM_P,@ID_OUT) ";
+                    var sql = "call createagenda(@MED_ID,@DATA_P,@ID_OUT) ";
                     var param = new DynamicParameters();
                     param.Add("@MED_ID", agenda.Med_id);
                     param.Add("@DATA_P", agenda.Dia);
@@ -37,7 +41,23 @@ namespace IntMed.Infrastructure.Repositories
                     {
                         result.AgendaId = agId;
                         result.Dia = agenda.Dia;
-                        result.Medico = new Medico(await GetMedicobyId(agenda.Med_id));
+                        result.Medico = new Medico(medico);
+                        sql = "insert into horario(hor_id,horario,status,data_modificacao,ag_id) " +
+                            "values((select max(hor_id)+1 from horario),@HOR_P,'A',current_timestamp,@AG_ID)";
+                        
+                        foreach (var item in agenda.horario)
+                        {
+                            var hora = int.Parse(item.Split(':')[0]);
+                            var minuto = int.Parse(item.Split(':')[1]);
+                            var data = new DateTime(agenda.Dia.Year, agenda.Dia.Month, agenda.Dia.Day, hora, minuto, 0);
+                            var p = new DynamicParameters();
+                            param.Add("@HOR_P", data);
+                            param.Add("@AG_ID", agId);
+
+                            await connection.ExecuteScalarAsync<int>(sql, param);
+
+                        }
+
                     }
 
                     return result;

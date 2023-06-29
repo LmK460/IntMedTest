@@ -28,10 +28,17 @@ namespace IntMed.Application.Commands.Agendas.CommandHandlers
                 Exception exception = new Exception("Periodo Invalido");
                 throw exception;
             }
+            //valida horarios
+            foreach (var item in request.horario)
+            {
+                if( int.Parse(item.Split(':')[0]) > 24 || int.Parse(item.Split(':')[1]) > 59){
+                    return new CreateAgendaResponse();
+                }
+            }
 
-            var agendaDtoDia = _agendaRepository.GetAgendaByMedId(request.Med_id, request.Dia);
+            var agendaDtoDia = await _agendaRepository.GetAgendaByMedId(request.Med_id, request.Dia);
 
-            if (agendaDtoDia == null)
+            if (agendaDtoDia.AgendaId <= 0)
             {
                 //faz insercao
                 CreateAgendaRequest createAgendaRequest = new CreateAgendaRequest
