@@ -41,7 +41,7 @@ namespace IntMed.Infrastructure.Repositories
                     {
                         result.AgendaId = agId;
                         result.Dia = agenda.Dia;
-                        result.Medico = new Medico(medico);
+                        result.Medico = medico;
                         sql = "insert into horario(hor_id,horario,status,data_modificacao,ag_id) " +
                             "values((select max(hor_id)+1 from horario),@HOR_P,'A',current_timestamp,@AG_ID)";
                         
